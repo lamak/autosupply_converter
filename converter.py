@@ -21,6 +21,7 @@ export_day = args.date if args.date else datetime.strftime(datetime.now() - time
 today = datetime.now().strftime(date_format)
 
 export_template_base_row = 7
+export_path = '//vl20-srv15/d$/smAbmLoader/Export/CsvData/'
 
 import_results = dict()
 export_results = dict()
@@ -59,17 +60,18 @@ if import_results:
     for wh in import_results.keys():
         filename_warehouse = wh
         filename = f'{filename_prefix}_{filename_warehouse}_{export_day}.csv'
+        filepath = os.path.join(export_path, filename)
         # todo: add error handling on filenames, get yesterday if today not available
-        if os.path.isfile(filename):
+        if os.path.isfile(filepath):
 
-            with open(filename, 'r', encoding='utf-8') as f:
+            with open(filepath, 'r', encoding='utf-8') as f:
                 reader = csv.reader(f, delimiter='¦')
                 for i in reader:
                     article = i[0]
                     warehouse = i[1]  # also maybe key if we sure in exported data
                     insert_or_append(export_results, warehouse, article)
         else:
-            errors.append(f'Место хранения {wh}: Файл {filename} недоступен')
+            errors.append(f'Место хранения {wh}: Файл {filepath} недоступен')
 
 if import_results and export_results:
     for wh, articles in import_results.items():
