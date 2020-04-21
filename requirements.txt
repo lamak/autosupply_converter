@@ -1,1 +1,7 @@
-openpyxl
+openpyxl~=3.0.3
+flask~=1.1.2
+bootstrap-flask
+flask-wtf
+pandas~=1.0.3
+Werkzeug~=1.0.1
+WTForms~=2.2.1
