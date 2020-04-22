@@ -1,10 +1,10 @@
 import os
 import uuid
 
-from flask import Flask, flash, request, redirect, url_for, send_from_directory, render_template
+from flask import Flask, flash, redirect, url_for, send_from_directory, render_template
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileRequired
+from flask_wtf.file import FileRequired, FileAllowed
 from werkzeug.utils import secure_filename
 from wtforms import FileField
 
@@ -14,13 +14,12 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY')
 bootstrap = Bootstrap(app)
 
+PATH_UPLOAD = os.environ.get('PATH_UPLOAD', 'uploads')
+PATH_RESULT = os.environ.get('PATH_RESULT', 'results')
+
 
 class FileUploadForm(FlaskForm):
-    upload = FileField(validators=[FileRequired()])
-
-
-def validate_filename(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() == 'xlsx'
+    upload = FileField(validators=[FileRequired(), FileAllowed(upload_set=['xlsx', 'docx'])])
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -33,14 +32,8 @@ def upload_file():
     }
     if form.validate_on_submit():
         f = form.upload.data
-        filename = secure_filename(f.filename)
-
-        if not validate_filename(filename):
-            flash('Выберите XLSX документ')
-            return redirect(request.url)
-
-        filename = f'{uuid.uuid4()}_{filename}'
-        filepath = os.path.join(os.environ.get('UPLOAD_FOLDER'), filename)
+        filename = f'{uuid.uuid4()}_{secure_filename(f.filename)}'
+        filepath = os.path.join(PATH_UPLOAD, filename)
         f.save(filepath)
         errors = list()
 
@@ -57,4 +50,4 @@ def upload_file():
 
 @app.route('/results/<filename>')
 def download_result(filename):
-    return send_from_directory('results', filename)
+    return send_from_directory(PATH_RESULT, filename)
