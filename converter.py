@@ -1,12 +1,13 @@
-import os
 import uuid
 from datetime import datetime, timedelta
+from os import path
+from typing import Tuple
 
 import openpyxl
 import pandas as pd
 
 
-def process_supply(filepath):
+def process_supply(filepath: str, export_path: str, result_path: str, template: str) -> Tuple[str, list]:
     errors = list()
     date_format = '%Y%m%d'
     export_date = datetime.strftime(datetime.now() - timedelta(1), date_format)
@@ -32,9 +33,9 @@ def process_supply(filepath):
         results = dict()
         for warehouse in imp.keys():
             exp_filename = f'skubody_{warehouse}_{export_date}.csv'
-            exp_filepath = os.path.join(os.environ.get('CONVERTER_EXPORT_PATH'), exp_filename)
+            exp_filepath = path.join(export_path, exp_filename)
 
-            if os.path.isfile(exp_filepath):
+            if path.isfile(exp_filepath):
                 warehouse_articles = pd.read_csv(
                     filepath_or_buffer=exp_filepath,
                     sep='¦',
@@ -69,19 +70,19 @@ def process_supply(filepath):
     def write_down(fin: dict) -> str:
         result = ''
         if fin:
-            wb = openpyxl.load_workbook(os.environ.get('CONVERTER_TEMPLATE_FILE'))
+            wb = openpyxl.load_workbook(template)
             sh = wb.active
             sh._current_row = 6  # header row, to append after
 
             today = datetime.now().strftime(date_format)
             result = f'autosupply_results_{today}_{uuid.uuid4()}.xlsx'
-            result_path = os.path.join('results', result)
+            res_path = path.join(result_path, result)
 
             for wh, articles in fin.items():
                 for article in articles:
                     sh.append((article, wh))
 
-            wb.save(result_path)
+            wb.save(res_path)
         return result
 
     import_results = collect_import_data(filepath)

@@ -1,6 +1,7 @@
 import os
 import uuid
 
+from dotenv import load_dotenv
 from flask import Flask, flash, redirect, url_for, send_from_directory, render_template
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
@@ -10,12 +11,15 @@ from wtforms import FileField
 
 from converter import process_supply
 
+load_dotenv()
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY')
+app.secret_key = os.environ.get('SECRET_KEY', 'dev')
 bootstrap = Bootstrap(app)
 
 PATH_UPLOAD = os.environ.get('PATH_UPLOAD', 'uploads')
 PATH_RESULT = os.environ.get('PATH_RESULT', 'results')
+PATH_EXPORT = os.environ.get('PATH_EXPORT', '.')
+TEMPLATE_FILE = os.environ.get('TEMPLATE_FILE', 'sku-body-template.xlsx')
 
 
 class FileUploadForm(FlaskForm):
@@ -37,7 +41,7 @@ def upload_file():
         f.save(filepath)
         errors = list()
 
-        result, errors = process_supply(filepath)
+        result, errors = process_supply(filepath, PATH_EXPORT, PATH_RESULT, TEMPLATE_FILE)
 
         if errors:
             flash('\n'.join(errors))
