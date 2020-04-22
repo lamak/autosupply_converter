@@ -4,6 +4,7 @@ import uuid
 from flask import Flask, flash, request, redirect, url_for, send_from_directory, render_template
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileRequired
 from werkzeug.utils import secure_filename
 from wtforms import FileField
 
@@ -15,7 +16,7 @@ bootstrap = Bootstrap(app)
 
 
 class FileUploadForm(FlaskForm):
-    file = FileField()
+    upload = FileField(validators=[FileRequired()])
 
 
 def validate_filename(filename):
@@ -24,36 +25,32 @@ def validate_filename(filename):
 
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
+    form = FileUploadForm()
     params = {
         'template_name_or_list': 'index.html',
         'title': 'Конвертер остатков автозаказа',
-        'form': FileUploadForm(),
+        'form': form,
     }
+    if form.validate_on_submit():
+        f = form.upload.data
+        filename = secure_filename(f.filename)
 
-    if request.method == 'POST':
-        if not request.files.get('file'):
-            flash('Файл не выбран')
-            return redirect(request.url)
-
-        file = request.files['file']
-
-        if not validate_filename(file.filename):
+        if not validate_filename(filename):
             flash('Выберите XLSX документ')
             return redirect(request.url)
 
-        if file:
-            filename = f'{uuid.uuid4()}_{secure_filename(file.filename)}'
-            filepath = os.path.join(os.environ.get('UPLOAD_FOLDER'), filename)
-            file.save(filepath)
-            errors = list()
+        filename = f'{uuid.uuid4()}_{filename}'
+        filepath = os.path.join(os.environ.get('UPLOAD_FOLDER'), filename)
+        f.save(filepath)
+        errors = list()
 
-            result, errors = process_supply(filepath)
+        result, errors = process_supply(filepath)
 
-            if errors:
-                flash('\n'.join(errors))
+        if errors:
+            flash('\n'.join(errors))
 
-            if result:
-                return redirect(url_for('download_result', filename=result))
+        if result:
+            return redirect(url_for('download_result', filename=result))
 
     return render_template(**params)
 
