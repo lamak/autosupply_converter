@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    {{ bootstrap.load_css() }}}
+</head>
+<body>
+
+<div class="container">
+    {% if error %}<p class=error><strong>Error:</strong> {{ error }}{% endif %}
+
+    <div class="header"><br></div>
+    <div class="jumbotron">
+        <h1>Конвертер</h1>
+        <p class="lead">Формирование шаблона для выгрузки в автозаказ на основе входящего документ XLSX</p>
+        <form action="" method="post" name="send" role="form" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                <p>{{ form.upload(class="form-control") }}</p>
+            </div>
+            <p><input class="btn btn-lg btn-success" type="submit" value="Выполнить"></p>
+        </form>
+    </div>
+    {% for message in get_flashed_messages() %}
+    <div class="alert alert-info" role="alert">{{ message }}</div>
+    {% endfor %}
+</div>
+{{ bootstrap.load_js() }}
+</body>
+</html>
